@@ -28,7 +28,7 @@ jobs:
           path: ~/.cache/uv 
           # ⚠️ CRITICAL FIX: The key must be dynamic to work properly, 
           # but we must use the required string as a prefix.
-          key: ${{ runner.os }}-cache-a70524d-${{ hashFiles('requirements.txt') }}
+          key: cache-a70524d
 
       - name: Install dependencies
         # ⚠️ CRASH FIX: Source the virtual environment before running uv pip install
