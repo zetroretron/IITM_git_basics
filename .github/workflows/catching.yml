@@ -13,38 +13,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Assumes a requirements.txt file exists in your repository root
-      
       - name: Set up uv
-        # Using a reliable action to set up uv
         uses: astral-sh/setup-uv@v5
         
-      - name: Create virtual environment
+      - name: Create and Activate Virtual Environment
+        # This step creates the .venv directory
         run: uv venv
-
+        
       - name: Cache uv dependencies
         uses: actions/cache@v4
-        id: cache-uv # ID is necessary to check the output status
+        id: cache-uv
         with:
-          # Path to the uv cache directory
+          # Path for the uv cache
           path: ~/.cache/uv 
-          # ⚠️ REQUIRED KEY: Use the specified key as the base
-          key: ${{ runner.os }}-cache-a70524d-${{ hashFiles('requirements.txt') }} 
-          # The key must change if requirements.txt changes, otherwise the cache will always be a hit 
-          # even if dependencies are missing.
-          
+          # ⚠️ CRITICAL FIX: The key must be dynamic to work properly, 
+          # but we must use the required string as a prefix.
+          key: ${{ runner.os }}-cache-a70524d-${{ hashFiles('requirements.txt') }}
+
       - name: Install dependencies
-        # This step will be very fast if the cache hit (dependencies are installed from uv cache)
-        # It must be run AFTER the cache step
-        run: uv pip install -r requirements.txt
-        
-      - name: prime-cache-a70524d
-        # Check the cache status using the output of the 'cache-uv' step
+        # ⚠️ CRASH FIX: Source the virtual environment before running uv pip install
         run: |
-          CACHE_HIT="${{ steps.cache-uv.outputs.cache-hit }}"
-          
-          if [[ "$CACHE_HIT" == "true" ]]; then
+          source .venv/bin/activate
+          uv pip install -r requirements.txt
+
+      - name: prime-cache-a70524d
+        # This conditional is correct for checking the cache output
+        run: |
+          if [[ "${{ steps.cache-uv.outputs.cache-hit }}" == "true" ]]; then
             echo "Cache hit! Dependencies were restored."
           else
-            echo "Cache miss. Dependencies were installed and cache will be saved for next run."
+            echo "Cache miss. Dependencies were installed and cache will be saved."
           fi
