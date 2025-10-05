@@ -22,22 +22,21 @@ jobs:
         
       - name: Cache uv dependencies
         uses: actions/cache@v4
-        id: cache-uv
+        id: cache-uv # ID is necessary to check the output status
         with:
-          # Path for the uv cache
           path: ~/.cache/uv 
-          # ⚠️ CRITICAL FIX: The key must be dynamic to work properly, 
-          # but we must use the required string as a prefix.
-          key: cache-a70524d
+          # 🎯 STATIC KEY: Required for validation check
+          key: cache-a70524d 
 
       - name: Install dependencies
-        # ⚠️ CRASH FIX: Source the virtual environment before running uv pip install
+        # Fix for the "File not found" and "uv not found" errors
         run: |
+          # The requirements.txt file must exist in the repo root
           source .venv/bin/activate
           uv pip install -r requirements.txt
-
+        
       - name: prime-cache-a70524d
-        # This conditional is correct for checking the cache output
+        # Check the cache status using the output of the 'cache-uv' step
         run: |
           if [[ "${{ steps.cache-uv.outputs.cache-hit }}" == "true" ]]; then
             echo "Cache hit! Dependencies were restored."
