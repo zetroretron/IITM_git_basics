@@ -13,30 +13,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 1. SETUP UV (Installs uv globally)
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
         
-      - name: Create and Activate Virtual Environment
-        # This step creates the .venv directory
+      # 2. CREATE VENV 
+      - name: Create virtual environment
         run: uv venv
         
+      # 3. CACHE STEP (Required key for validation)
       - name: Cache uv dependencies
         uses: actions/cache@v4
-        id: cache-uv # ID is necessary to check the output status
+        id: cache-uv
         with:
           path: ~/.cache/uv 
-          # 🎯 STATIC KEY: Required for validation check
+          # 🎯 Static key required by the prompt
           key: cache-a70524d 
 
+      # 4. INSTALL DEPENDENCIES (CRASH FIX)
       - name: Install dependencies
-        # Fix for the "File not found" and "uv not found" errors
-        run: |
-          # The requirements.txt file must exist in the repo root
-          source .venv/bin/activate
-          uv pip install -r requirements.txt
+        # This command explicitly executes the uv installed inside the .venv
+        # It relies on a 'requirements.txt' file existing in the root.
+        run: ./.venv/bin/uv pip install -r requirements.txt
         
+      # 5. ECHO CACHE RESULT (This step should now execute)
       - name: prime-cache-a70524d
-        # Check the cache status using the output of the 'cache-uv' step
         run: |
           if [[ "${{ steps.cache-uv.outputs.cache-hit }}" == "true" ]]; then
             echo "Cache hit! Dependencies were restored."
